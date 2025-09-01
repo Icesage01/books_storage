@@ -1,0 +1,76 @@
+services:
+  app:
+    build: .
+    container_name: books-storage-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT}:80"
+    volumes:
+      - .:/app
+      - ./.docker/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./.docker/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro
+      - ./.docker/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
+      - ./.docker/supervisord.conf:/etc/supervisor/conf.d/supervisord.conf:ro
+      - ./.docker/migrate.sh:/app/.docker/migrate.sh:ro
+    env_file:
+      - .env
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - books-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  mysql:
+    image: mysql:8.0
+    container_name: books-storage-mysql
+    restart: unless-stopped
+    ports:
+      - "${DB_PORT}:3306"
+    env_file:
+      - .env
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./.docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - books-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: books-storage-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - books-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  books-network:
+    driver: bridge

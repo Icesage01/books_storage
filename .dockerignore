@@ -1,0 +1,44 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+runtime/logs/*
+*.log
+
+# Cache
+runtime/cache/*
+vendor/
+
+# Tests
+tests/
+codeception.yml
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+.docker/
+
+# Documentation
+README.md
+ARCHITECTURE.md
+ANSWERS.md
+
+# Environment
+.env
+env.example
+
+# Temporary files
+*.tmp
+*.temp
